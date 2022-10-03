@@ -33,31 +33,35 @@ const resourceImageUpload = multer({
     fieldNameSize: 100, // should be long enough for a uuid
     fieldSize: 10 * 1024 * 1024 // 20MB max file size
   }
-}).array('resource-images')
+}).single('image')
 
 app.post('/resource-images', resourceImageUpload, (req, res) => {
   console.log("received recording upload")
 
-  let promises: Promise<OutputInfo>[] = [];
-  let filenames: string[] = [];
-  (req.files as any[]).forEach((f: any) => {
-      promises.push(
-        sharp(f.buffer).resize(1024, 1024).toFile(STORAGE_PATH + RESOURCE_IMAGES_DIR_NAME)
-      ) 
-      filenames.push(f.filename)
-  })
-
-  Promise.all(promises).then(() => {
-    res.send(JSON.stringify({
-      ok: true, 
-      filenames
-    }))
-  }).catch(() => {
+  if(req.file) {
+    let filename = Date.now() + '-' +  Math.random().toFixed(10).substring(2)
+    let filepath = STORAGE_PATH + RESOURCE_IMAGES_DIR_NAME + '/' + filename + ".jpg"
+    console.log("writing resized image to", filepath) 
+    sharp(req.file.buffer).resize(1024, 1024, {fit: 'inside'}).toFormat('jpg').toFile(filepath)
+    .then(() => {
+      res.send(JSON.stringify({
+        ok: true, 
+        filename
+      }))
+    })
+    .catch((e: any) => {
+      console.log(e) 
+      res.send(JSON.stringify({
+        ok: false, 
+        error: "failed to process images"
+      }))
+    }) 
+  } else {
     res.send(JSON.stringify({
       ok: false, 
-      error: "failed to process images"
+      error: "no image"
     }))
-  }) 
+  }
 })
 
 app.get('/', (_req, res) => {
