@@ -39,14 +39,14 @@ app.post('/resource-images', resourceImageUpload, (req, res) => {
   console.log("received recording upload")
 
   if(req.file) {
-    let filename = Date.now() + '-' +  Math.random().toFixed(10).substring(2)
-    let filepath = STORAGE_PATH + RESOURCE_IMAGES_DIR_NAME + '/' + filename + ".jpg"
+    let filename = Date.now() + '-' +  Math.random().toFixed(10).substring(2) + ".jpg"
+    let filepath = STORAGE_PATH + RESOURCE_IMAGES_DIR_NAME + '/' + filename 
     console.log("writing resized image to", filepath) 
     sharp(req.file.buffer).resize(1024, 1024, {fit: 'inside'}).toFormat('jpg').toFile(filepath)
     .then(() => {
       res.send(JSON.stringify({
         ok: true, 
-        filename
+        relativeUrl: filename
       }))
     })
     .catch((e: any) => {
