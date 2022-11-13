@@ -117,6 +117,13 @@
     "@types/qs" "*"
     "@types/range-parser" "*"
 
+"@types/express-slow-down@^1.3.2":
+  version "1.3.2"
+  resolved "https://registry.yarnpkg.com/@types/express-slow-down/-/express-slow-down-1.3.2.tgz#99a5513b3f465efb1cb4f2db6375d36d7ab72fa4"
+  integrity sha512-Jw/orNMX+htFMYMugjhLotS5eRkdId4V5/89vqNXoUfxaHBU8VVIshItDh5YuWeyGeKuPli2fh94ORjYz/dkxA==
+  dependencies:
+    "@types/express" "*"
+
 "@types/express@*":
   version "4.17.13"
   resolved "https://registry.npmjs.org/@types/express/-/express-4.17.13.tgz"
@@ -424,6 +431,11 @@ clean-stack@^2.0.0:
   resolved "https://registry.yarnpkg.com/clean-stack/-/clean-stack-2.2.0.tgz#ee8472dbb129e727b31e8a10a427dee9dfe4008b"
   integrity sha512-4diC9HaTE+KRAMWhDhrGOECgWZxoevMc5TlkObMqNSsVU62PYzXZ/SMTjzyGAFF1YusgxGcSWTEXBhp0CPwQ1A==
 
+clone@^1.0.2:
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/clone/-/clone-1.0.4.tgz#da309cc263df15994c688ca902179ca3c7cd7c7e"
+  integrity sha512-JQHZ2QMW6l3aH/j6xCqQThY/9OH4D/9ls34cgkUBiEeocRTU04tHfKPBsUK1PqZCUQM7GiA0IIXJSuXHI64Kbg==
+
 color-convert@^2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/color-convert/-/color-convert-2.0.1.tgz#72d3a68d598c9bdb3af2ad1e84f21d896abd4de3"
@@ -550,6 +562,13 @@ deep-extend@^0.6.0:
   resolved "https://registry.yarnpkg.com/deep-extend/-/deep-extend-0.6.0.tgz#c4fa7c95404a17a9c3e8ca7e1537312b736330ac"
   integrity sha512-LOHxIOaPYdHlJRtCQfDIVZtfw/ufM8+rVj649RIHzcm/vGwQRXFt6OPqIFWsm2XEMrNIEtWR64sY1LEKD2vAOA==
 
+defaults@^1.0.3:
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/defaults/-/defaults-1.0.4.tgz#b0b02062c1e2aa62ff5d9528f0f98baa90978d7a"
+  integrity sha512-eFuaLoy/Rxalv2kr+lqMlUnrDWV+3j4pljOIJgLIhI058IQfWJ7vXhyEIHu+HtC738klGALYxOKDO0bQP3tg8A==
+  dependencies:
+    clone "^1.0.2"
+
 delegates@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/delegates/-/delegates-1.0.0.tgz#84c6e159b81904fdca59a0ef44cd870d31250f9a"
@@ -638,6 +657,13 @@ expand-template@^2.0.3:
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/expand-template/-/expand-template-2.0.3.tgz#6e14b3fcee0f3a6340ecb57d2e8918692052a47c"
   integrity sha512-XYfuKMvj4O35f/pOXLObndIRvyQ+/+6AhODh+OKWj9S9498pHHn/IMszH+gt0fBCRWMNfk1ZSp5x3AifmnI2vg==
+
+express-slow-down@^1.5.0:
+  version "1.5.0"
+  resolved "https://registry.yarnpkg.com/express-slow-down/-/express-slow-down-1.5.0.tgz#7222ffb72e7f085f9eed19f60071d239e3d6657e"
+  integrity sha512-GCoa2a+mf7CE7C00TIoPMbcgQSXxEVolSAbP97uHyzVy87ssp0/IDtJ/GBxjv+gnfM2R1l2QcEfYixFJK75n7w==
+  dependencies:
+    defaults "^1.0.3"
 
 express@^4.18.1:
   version "4.18.1"

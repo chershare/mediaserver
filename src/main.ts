@@ -1,13 +1,14 @@
-import * as dotenv from 'dotenv' 
+import * as dotenv from 'dotenv'
 dotenv.config()
 
 import express from 'express'
 import multer from 'multer'
 import cors from 'cors'
 
-import sharp, {OutputInfo} from 'sharp'
+import sharp, { OutputInfo } from 'sharp'
 
 import config from './config'
+import slowDown from 'express-slow-down'
 
 import * as fs from 'node:fs'
 
@@ -18,14 +19,58 @@ const PORT = process.env.PORT ?? 8000
 const STORAGE_PATH = "./storage/"
 const RESOURCE_IMAGES_DIR_NAME = "resource-images"
 
+const speedLimiter = slowDown({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  delayAfter: 100, // allow 100 requests per 15 minutes, then...
+  delayMs: 500 // begin adding 500ms of delay per request above 100:
+  // request # 101 is delayed by  500ms
+  // request # 102 is delayed by 1000ms
+  // request # 103 is delayed by 1500ms
+  // etc.
+});
+
 let db: sqlite3.Database
 
 let getResourcesQuery: sqlite3.Statement
+let searchResourcesQuery: sqlite3.Statement
+
 function prepareStatements() {
-  getResourcesQuery = db.prepare("SELECT * FROM resources")
+  getResourcesQuery = db.prepare("SELECT * FROM resources LIMIT 100")
+  // searchResourcesQueryWithDate = 
+  searchResourcesQuery = db.prepare(`
+SELECT 
+  name, title, description, 
+  contact_info as contactInfo, 
+  image_url as titleImage,
+  tagList
+FROM
+  ( 
+    SELECT 
+      * 
+    from 
+      resources as r, 
+      resource_images as i
+    where 
+      r.name == i.resource_name AND
+      i.position == 0
+  ) as b, 
+  (
+    SELECT 
+      resource_name, GROUP_CONCAT(tag) as tagList
+    FROM 
+      resource_tags
+    GROUP BY
+      resource_name
+  ) as t
+WHERE
+  b.resource_name == t.resource_name
+LIMIT 100
+;
+  `) 
 }
 function finalizePreparedStatements() {
   getResourcesQuery.finalize() 
+  searchResourcesQuery.finalize()
 }
 
 
@@ -33,6 +78,10 @@ function runServer() {
   const app = express()
 
   app.use(cors({origin: config.clientOrigins}))
+
+  // app.enable("trust proxy"); // only if you're behind a reverse proxy (Heroku, Bluemix, AWS if you use an ELB, custom Nginx setup, etc)
+  // apply to all requests
+  app.use(speedLimiter);
 
   // create dirs if they don't exist
   for(let dirName of [RESOURCE_IMAGES_DIR_NAME]) {
@@ -97,7 +146,7 @@ function runServer() {
   })
 
   app.get('/resources', (req, res) => {
-    getResourcesQuery.all((err, rows) => {
+    searchResourcesQuery.all((err, rows) => {
       if(err == null) {
         console.log("result from query", rows) 
         res.send(rows) 
