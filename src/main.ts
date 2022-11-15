@@ -14,6 +14,8 @@ import * as fs from 'node:fs'
 
 import * as sqlite3 from 'sqlite3'
 
+import * as queries from './queries'
+
 const PORT = process.env.PORT ?? 8000
 
 const STORAGE_PATH = "./storage/"
@@ -31,48 +33,29 @@ const speedLimiter = slowDown({
 
 let db: sqlite3.Database
 
-let getResourcesQuery: sqlite3.Statement
+let getResourceQuery: sqlite3.Statement
 let searchResourcesQuery: sqlite3.Statement
+let getBookingsQuery: sqlite3.Statement
+let getResourceImagesQuery: sqlite3.Statement
 
 function prepareStatements() {
-  getResourcesQuery = db.prepare("SELECT * FROM resources LIMIT 100")
+  getResourceQuery = db.prepare(queries.resourceBase + " AND b.resource_name == ?")
   // searchResourcesQueryWithDate = 
-  searchResourcesQuery = db.prepare(`
-SELECT 
-  name, title, description, 
-  contact_info as contactInfo, 
-  image_url as titleImage,
-  tagList
-FROM
-  ( 
-    SELECT 
-      * 
-    from 
-      resources as r, 
-      resource_images as i
-    where 
-      r.name == i.resource_name AND
-      i.position == 0
-  ) as b, 
-  (
-    SELECT 
-      resource_name, GROUP_CONCAT(tag) as tagList
-    FROM 
-      resource_tags
-    GROUP BY
-      resource_name
-  ) as t
-WHERE
-  b.resource_name == t.resource_name
-LIMIT 100
-;
-  `) 
-}
-function finalizePreparedStatements() {
-  getResourcesQuery.finalize() 
-  searchResourcesQuery.finalize()
+  searchResourcesQuery = db.prepare(
+    queries.resourceBase + 
+    " LIMIT 100"
+  )
+  getBookingsQuery = db.prepare(`SELECT * FROM bookings WHERE resource_name == ?`)
+  getResourceImagesQuery = db.prepare(`SELECT image_url FROM resource_images WHERE resource_name == ? ORDER BY position`)
 }
 
+// TODO call this if the server is shutting down && the program continues to run
+function finalizePreparedStatements() {
+  getResourceQuery.finalize()
+  searchResourcesQuery.finalize()
+  getBookingsQuery.finalize()
+  getResourceImagesQuery.finalize()
+}
 
 function runServer() {
   const app = express()
@@ -145,6 +128,40 @@ function runServer() {
     serveFile(RESOURCE_IMAGES_DIR_NAME, req, res)
   })
 
+
+  app.get('/resources/:resourceName/images', (req, res) => {
+    getResourceImagesQuery.all(req.params.resourceName, (err, rows) => {
+      if(err == null) {
+        res.send(rows) 
+      } else {
+        res.send("Error: " + err)
+      }
+    })
+  }) 
+
+  app.get('/resources/:resourceName/bookings', (req, res) => {
+    getBookingsQuery.all(req.params.resourceName, (err, rows) => {
+      if(err == null) {
+        res.send(rows) 
+      } else {
+        res.send("Error: " + err)
+      }
+    })
+  }) 
+
+  app.get('/resources/:resourceName', (req, res) => {
+    console.log("looking up resource", req.params.resourceName)
+    getResourceQuery.get(req.params.resourceName, (err, row) => {
+      console.log(err, row)
+      if(err == null) {
+        console.log("result from query", row) 
+        res.send(row) 
+      } else {
+        res.send("Error: " + err)
+      }
+    })
+  })
+
   app.get('/resources', (req, res) => {
     searchResourcesQuery.all((err, rows) => {
       if(err == null) {
@@ -176,6 +193,6 @@ function runServer() {
       }
     })
   })
-  await runServer()
+  runServer()
 })()
   
