@@ -35,25 +35,30 @@ let db: sqlite3.Database
 
 let getResourceQuery: sqlite3.Statement
 let searchResourcesQuery: sqlite3.Statement
-let getBookingsQuery: sqlite3.Statement
+
 let getResourceImagesQuery: sqlite3.Statement
+
+let getBookingsQueryByAccount: sqlite3.Statement
+let getResourceBookingsQuery: sqlite3.Statement
 
 function prepareStatements() {
   getResourceQuery = db.prepare(queries.resourceBase + " AND b.resource_name == ?")
-  // searchResourcesQueryWithDate = 
-  searchResourcesQuery = db.prepare(
-    queries.resourceBase + 
-    " LIMIT 100"
-  )
-  getBookingsQuery = db.prepare(`SELECT * FROM bookings WHERE resource_name == ?`)
+  searchResourcesQuery = db.prepare(queries.resourceBase + " LIMIT 100")
+
   getResourceImagesQuery = db.prepare(`SELECT image_url FROM resource_images WHERE resource_name == ? ORDER BY position`)
+
+  getBookingsQueryByAccount = db.prepare(`SELECT * FROM bookings WHERE booker_account_id == ?`)
+  getResourceBookingsQuery = db.prepare(`SELECT * FROM bookings WHERE resource_name == ?`)
 }
 
 // TODO call this if the server is shutting down && the program continues to run
 function finalizePreparedStatements() {
   getResourceQuery.finalize()
   searchResourcesQuery.finalize()
-  getBookingsQuery.finalize()
+
+  getBookingsQueryByAccount.finalize()
+
+  getResourceBookingsQuery.finalize()
   getResourceImagesQuery.finalize()
 }
 
@@ -140,7 +145,7 @@ function runServer() {
   }) 
 
   app.get('/resources/:resourceName/bookings', (req, res) => {
-    getBookingsQuery.all(req.params.resourceName, (err, rows) => {
+    getResourceBookingsQuery.all(req.params.resourceName, (err, rows) => {
       if(err == null) {
         res.send(rows) 
       } else {
@@ -151,18 +156,17 @@ function runServer() {
 
   app.get('/resources/:resourceName', (req, res) => {
     console.log("looking up resource", req.params.resourceName)
-    getResourceQuery.get(req.params.resourceName, (err, row) => {
-      console.log(err, row)
+    getResourceQuery.all(req.params.resourceName, (err, rows) => {
       if(err == null) {
-        console.log("result from query", row) 
-        res.send(row) 
+        console.log("result from query", rows[0])
+        res.send(rows[0]) 
       } else {
         res.send("Error: " + err)
       }
     })
   })
 
-  app.get('/resources', (req, res) => {
+  app.get('/resources', (_req, res) => {
     searchResourcesQuery.all((err, rows) => {
       if(err == null) {
         console.log("result from query", rows) 
@@ -184,7 +188,7 @@ function runServer() {
 (async () => {
   await new Promise<void>((resolve, reject) => {
     console.log("trying to connect to", process.env.SQLITE_DB)
-    db = new sqlite3.Database(process.env.SQLITE_DB!, err => {
+    db = new sqlite3.Database(process.env.SQLITE_DB!, err => { //sqlite3.OPEN_READONLY,
       if(err) {
         reject("could not connect to the db") 
       } else {
@@ -192,6 +196,7 @@ function runServer() {
         resolve()
       }
     })
+    db.configure('busyTimeout', 30000)
   })
   runServer()
 })()
