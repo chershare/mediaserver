@@ -48,7 +48,9 @@ function prepareStatements() {
   getResourceImagesQuery = db.prepare(`SELECT image_url FROM resource_images WHERE resource_name == ? ORDER BY position`)
 
   getBookingsQueryByAccount = db.prepare(`SELECT * FROM bookings WHERE booker_account_id == ?`)
-  getResourceBookingsQuery = db.prepare(`SELECT * FROM bookings WHERE resource_name == ?`)
+  getResourceBookingsQuery = db.prepare(
+    `SELECT * FROM bookings WHERE resource_name == $rn AND start <= $until AND end >= $from`
+  ) 
 }
 
 // TODO call this if the server is shutting down && the program continues to run
@@ -145,7 +147,13 @@ function runServer() {
   }) 
 
   app.get('/resources/:resourceName/bookings', (req, res) => {
-    getResourceBookingsQuery.all(req.params.resourceName, (err, rows) => {
+    console.log("resource bookings, query", req.query)
+    getResourceBookingsQuery.all(
+      {
+        $rn: req.params.resourceName, 
+        $from: req.query.from, 
+        $until: req.query.until
+      }, (err, rows) => {
       if(err == null) {
         res.send(rows) 
       } else {
