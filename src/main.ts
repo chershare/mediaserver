@@ -191,6 +191,17 @@ function runServer() {
       console.log(`Server is running on port ${PORT}`);
     },
   )
+
+  app.get('/bookings', (req, res) => {
+    console.log("account bookings, query", req.query)
+    getBookingsQueryByAccount.all(req.query.accountId, (err, rows) => {
+      if(err == null) {
+        res.send(rows) 
+      } else {
+        res.send("Error: " + err)
+      }
+    })
+  }) 
 }
 
 (async () => {
