@@ -34,16 +34,23 @@ const speedLimiter = slowDown({
 let db: sqlite3.Database
 
 let getResourceQuery: sqlite3.Statement
+
 let searchResourcesQuery: sqlite3.Statement
+let searchResourceByCreatorQuery: sqlite3.Statement
+const MAX_TAGS = 5
 
 let getResourceImagesQuery: sqlite3.Statement
 
 let getBookingsQueryByAccount: sqlite3.Statement
 let getResourceBookingsQuery: sqlite3.Statement
 
+
 function prepareStatements() {
   getResourceQuery = db.prepare(queries.resourceBase + " AND b.resource_name == ?")
-  searchResourcesQuery = db.prepare(queries.resourceBase + " LIMIT 100")
+  searchResourcesQuery = db.prepare(queries.resourceBase)
+  searchResourceByCreatorQuery = db.prepare(
+    queries.resourceBase + " AND b.owner_account_id == ?"
+  ) 
 
   getResourceImagesQuery = db.prepare(`SELECT image_url FROM resource_images WHERE resource_name == ? ORDER BY position`)
 
@@ -57,6 +64,7 @@ function prepareStatements() {
 function finalizePreparedStatements() {
   getResourceQuery.finalize()
   searchResourcesQuery.finalize()
+  searchResourceByCreatorQuery.finalize()
 
   getBookingsQueryByAccount.finalize()
 
@@ -174,8 +182,14 @@ function runServer() {
     })
   })
 
-  app.get('/resources', (_req, res) => {
-    searchResourcesQuery.all((err, rows) => {
+  app.get('/resources', (req, res) => {
+    let query = queries.resourceBase
+    let params = []
+    if("creatorAccountId" in req.query) {
+      query += " b.creator_account_id == ?" 
+      params.push(req.query.creatorAccountId) 
+    } 
+    db.all(query ,(err, rows) => {
       if(err == null) {
         console.log("result from query", rows) 
         res.send(rows) 
