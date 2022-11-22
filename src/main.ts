@@ -221,7 +221,7 @@ function runServer() {
 (async () => {
   await new Promise<void>((resolve, reject) => {
     console.log("trying to connect to", process.env.SQLITE_DB)
-    db = new sqlite3.Database(process.env.SQLITE_DB!, err => { //sqlite3.OPEN_READONLY,
+    db = new sqlite3.Database(config.dbFile, err => { //sqlite3.OPEN_READONLY,
       if(err) {
         reject("could not connect to the db") 
       } else {
