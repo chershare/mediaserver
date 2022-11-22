@@ -16,8 +16,6 @@ import * as sqlite3 from 'sqlite3'
 
 import * as queries from './queries'
 
-const PORT = process.env.PORT ?? 8000
-
 const STORAGE_PATH = "./storage/"
 const RESOURCE_IMAGES_DIR_NAME = "resource-images"
 
@@ -200,9 +198,9 @@ function runServer() {
   })
 
   app.listen(
-    PORT, 
+    config.port, 
     () => {
-      console.log(`Server is running on port ${PORT}`);
+      console.log(`Server is running on port ${config.port}`);
     },
   )
 
@@ -220,7 +218,7 @@ function runServer() {
 
 (async () => {
   await new Promise<void>((resolve, reject) => {
-    console.log("trying to connect to", process.env.SQLITE_DB)
+    console.log("trying to connect to", config.dbFile)
     db = new sqlite3.Database(config.dbFile, err => { //sqlite3.OPEN_READONLY,
       if(err) {
         reject("could not connect to the db") 

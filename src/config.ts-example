@@ -3,5 +3,6 @@ export default {
     'https://chershare.aimparency.org', 
     'http://chershare.aimparency.org', 
   ], 
-  dbFile: '../indexer/db.sqlite'
+  dbFile: '../indexer/db.sqlite', 
+  port: 8001
 }
